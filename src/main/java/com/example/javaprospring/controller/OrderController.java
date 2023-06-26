@@ -26,14 +26,8 @@ public class OrderController {
         return orderService.getAll();
     }
 
-    @PostMapping("/products/{productId}")
-    public Order create(@PathVariable Integer productId) {
-        return orderService.save(productId);
-    }
-
-    @PutMapping("/{orderId}/products/{productId}")
-    public Order update(@PathVariable Integer orderId,
-                        @PathVariable Integer productId) {
-        return orderService.addProductToOrder(orderId, productId);
+    @PostMapping
+    public Order create() {
+        return orderService.save();
     }
 }
