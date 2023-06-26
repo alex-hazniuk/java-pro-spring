@@ -2,62 +2,58 @@ package com.example.javaprospring.service;
 
 import com.example.javaprospring.model.Order;
 import com.example.javaprospring.model.Product;
+import com.example.javaprospring.repository.OrderRepository;
+import com.example.javaprospring.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class OrderService {
-    private final Map<Integer, Order> ordersContainer = new HashMap<>();
-    private final List<Integer> ids = new ArrayList<>();
+    private final OrderRepository orderRepository;
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
-    public OrderService(ProductService productService) {
+    public OrderService(OrderRepository orderRepository,
+                        ProductService productService,
+                        ProductRepository productRepository) {
+        this.orderRepository = orderRepository;
         this.productService = productService;
+        this.productRepository = productRepository;
     }
 
     public Order getOrderById(int id) {
-        return ordersContainer.entrySet().stream()
-                .filter(e -> e.getKey() == id)
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .orElseThrow();
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND));
     }
 
-    public List<Order> getAll() {
-        return ordersContainer.values().stream().toList();
+    public List<Order>  getAll() {
+        List<Order> all = (List<Order>) orderRepository.findAll();
+        for (Order order : all) {
+            List<Product> productsByOrderId =
+                    productService.getProductsByOrderId(order.getId());
+            order.setProducts(productsByOrderId);
+            order.setCost(productService.getTotalCost(order.getId()));
+        }
+        return all;
     }
 
-    public Order save(int productId) {
-        List<Product> productsForOrder = new ArrayList<>();
-        Product product = get(productId);
-        productsForOrder.add(product);
-        int orderId = ids.size() + 1;
-        ids.add(orderId);
-        Order order = Order.builder()
-                .id(orderId)
-                .date(LocalDate.now())
-                .cost(product.getCost())
-                .products(productsForOrder).build();
-        ordersContainer.put(orderId, order);
-        return ordersContainer.get(orderId);
+    public Order save() {
+        Order order = new Order();
+        order.setDate(LocalDate.now());
+        return orderRepository.save(order);
     }
 
     public Order addProductToOrder(int orderId, int productId) {
         Order order = getOrderById(orderId);
-        Product product = get(productId);
-        order.getProducts().add(product);
-        double costSum = order.getProducts().stream()
-                .mapToDouble(Product::getCost)
-                .sum();
-        order.setCost(costSum);
-        return ordersContainer.get(orderId);
-    }
-
-    private Product get(int id) {
-        return productService
-                .getProductById(id)
-                .orElseThrow();
+        Product product = productService.getProductById(productId);
+        product.setOrderId(orderId);
+        productRepository.save(product);
+        order.setProducts(productService.getProductsByOrderId(orderId));
+        return order;
     }
 }
