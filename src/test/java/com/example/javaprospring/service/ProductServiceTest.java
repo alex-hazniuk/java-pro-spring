@@ -19,7 +19,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void save_ok() {
+    void saveOk() {
         Product product = Product.builder()
                 .id(1)
                 .name("bag")

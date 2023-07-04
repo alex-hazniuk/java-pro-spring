@@ -25,7 +25,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void get_orderById_ok() {
+    void getOrderByIdOk() {
         int orderId = 1;
         Order order = Order.builder()
                 .id(orderId)
@@ -39,7 +39,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void get_orderById_notOk() {
+    void getOrderByIdNotOk() {
         int orderId = 1;
         Mockito.when(orderRepository.findById(ArgumentMatchers.anyInt()))
                 .thenThrow(ResponseStatusException.class);
@@ -49,7 +49,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void getAll_ok() {
+    void getAllOk() {
         List<Order> orders = List.of(
                 Order.builder().id(1).date(LocalDate.now()).build(),
                 Order.builder().id(2).date(LocalDate.now()).build(),
@@ -69,7 +69,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void save_ok() {
+    void saveOk() {
         Order order = Order.builder()
                 .id(1)
                 .date(LocalDate.now())
